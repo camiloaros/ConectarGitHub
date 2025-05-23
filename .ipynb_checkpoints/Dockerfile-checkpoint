@@ -1,6 +1,22 @@
-FROM python:3.11
+FROM continuumio/miniconda3
+
 WORKDIR /app
 COPY . /app
-RUN pip install notebook
+
+# Instalar entorno con librerías necesarias
+RUN conda update -n base -c defaults conda -y && \
+    conda create -n geo_env -c conda-forge -y python=3.9 \
+    rsgislib geopandas matplotlib scikit-learn numpy && \
+    conda install -n geo_env -c conda-forge -y ipykernel && \
+    conda clean -afy && \
+    conda run -n geo_env python -m ipykernel install --user --name=geo_env --display-name "Python (geo_env)"
+
+# Cambiar shell para usar siempre el entorno geo_env
+SHELL ["conda", "run", "-n", "geo_env", "/bin/bash", "-c"]
+
 EXPOSE 8888
+
+# Ejecutar jupyter notebook
 CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
+
+
